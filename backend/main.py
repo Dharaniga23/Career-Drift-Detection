@@ -6,12 +6,21 @@ import pandas as pd
 import os
 from typing import List
 
+from contextlib import asynccontextmanager
+
 from database import engine, Session, create_db_and_tables
 from models import Student, Activity
 
 from sqlmodel import select
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create tables
+    create_db_and_tables()
+    yield
+    # Shutdown logic (if any) could go here
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,9 +39,7 @@ except Exception as e:
     print(f"Error loading model: {e}")
     model = None
 
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
+# Startup logic moved to lifespan
 
 class ActivityInput(BaseModel):
     name: str
@@ -134,3 +141,9 @@ def predict_drift(profile: StudentProfile):
         "relevant_ratio": relevant_ratio,
         "message": "Needs Attention" if drift_probability > 0.5 else "On Track"
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    # Use 0.0.0.0 to allow any local connection (localhost, 127.0.0.1, or network IP)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
