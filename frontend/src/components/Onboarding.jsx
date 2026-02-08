@@ -35,10 +35,16 @@ export default function Onboarding() {
 
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem('studentId', data.id);
-                localStorage.setItem('studentName', data.name);
-                localStorage.setItem('targetCareer', data.target_career);
-                navigate('/dashboard');
+                if (isLogin) {
+                    localStorage.setItem('studentId', data.id);
+                    localStorage.setItem('studentName', data.name);
+                    localStorage.setItem('targetCareer', data.target_career);
+                    navigate('/dashboard');
+                } else {
+                    alert('Registration successful! Please login to continue.');
+                    setIsLogin(true);
+                    setPassword(''); // Clear password for login
+                }
             } else {
                 alert(data.detail || 'Error during authentication');
             }
