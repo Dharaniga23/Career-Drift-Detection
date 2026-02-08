@@ -63,9 +63,9 @@ class StudentLogin(BaseModel):
     password: str
 
 CAREER_SKILLS = {
-    "Data Scientist": ["Python", "Pandas", "Scikit-Learn", "SQL", "Statistics", "TensorFlow", "Keras", "Tableau", "PowerBI", "Matplotlib", "Seaborn", "NumPy", "R", "Machine Learning", "Deep Learning", "Data Analysis", "Data Science", "Analytics", "Model", "Dataset"],
+    "Data Scientist": ["Python", "Pandas", "Scikit-Learn", "SQL", "Statistics", "TensorFlow", "Keras", "Tableau", "PowerBI", "Matplotlib", "Seaborn", "NumPy", "R", "Machine Learning", "Deep Learning", "Data Analysis", "Data Science", "Analytics", "Model", "Dataset", "Database"],
     "Frontend Dev": ["React", "CSS", "HTML", "JavaScript", "Figma", "Redux", "Tailwind", "Next.js", "TypeScript", "Vue", "Angular", "Sass", "Web Design", "UI", "UX", "Frontend", "App", "Website"],
-    "Backend Dev": ["FastAPI", "Docker", "PostgreSQL", "System Design", "Go", "Redis", "Kafka", "Microservices", "Flask", "Node.js", "Express", "MongoDB", "Django", "Kubernetes", "API", "Database", "Server", "Backend"]
+    "Backend Dev": ["Python", "FastAPI", "SQL", "Docker", "PostgreSQL", "System Design", "Go", "Redis", "Kafka", "Microservices", "Flask", "Node.js", "Express", "MongoDB", "Django", "Kubernetes", "API", "Database", "Server", "Backend"]
 }
 
 @app.post("/register")
