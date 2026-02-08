@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+from passlib.context import CryptContext
 import joblib
 import pandas as pd
 import os
@@ -49,16 +50,60 @@ class StudentProfile(BaseModel):
     target_career: str
     recent_activities: List[ActivityInput]
 
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+class StudentSignup(BaseModel):
+    name: str
+    email: str
+    password: str
+    target_career: str
+
+class StudentLogin(BaseModel):
+    email: str
+    password: str
+
 CAREER_SKILLS = {
     "Data Scientist": ["Python", "Pandas", "Scikit-Learn", "SQL", "Statistics", "TensorFlow", "Keras", "Tableau", "PowerBI", "Matplotlib", "Seaborn", "NumPy", "R", "Machine Learning", "Deep Learning", "Data Analysis", "Data Science", "Analytics", "Model", "Dataset"],
     "Frontend Dev": ["React", "CSS", "HTML", "JavaScript", "Figma", "Redux", "Tailwind", "Next.js", "TypeScript", "Vue", "Angular", "Sass", "Web Design", "UI", "UX", "Frontend", "App", "Website"],
     "Backend Dev": ["FastAPI", "Docker", "PostgreSQL", "System Design", "Go", "Redis", "Kafka", "Microservices", "Flask", "Node.js", "Express", "MongoDB", "Django", "Kubernetes", "API", "Database", "Server", "Backend"]
 }
 
+@app.post("/register")
+def register_student(student_in: StudentSignup):
+    with Session(engine) as session:
+        # Check if email exists
+        statement = select(Student).where(Student.email == student_in.email)
+        existing_student = session.exec(statement).first()
+        if existing_student:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        hashed_pwd = pwd_context.hash(student_in.password)
+        db_student = Student(
+            name=student_in.name,
+            email=student_in.email,
+            hashed_password=hashed_pwd,
+            target_career=student_in.target_career
+        )
+        session.add(db_student)
+        session.commit()
+        session.refresh(db_student)
+        return db_student
+
+@app.post("/login")
+def login_student(login_in: StudentLogin):
+    with Session(engine) as session:
+        statement = select(Student).where(Student.email == login_in.email)
+        student = session.exec(statement).first()
+        if not student or not pwd_context.verify(login_in.password, student.hashed_password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        return student
+
 @app.post("/students/")
 def create_student(student: Student):
+    # Backward compatibility or simplified create (needs email/pwd)
     with Session(engine) as session:
-        statement = select(Student).where(Student.name == student.name)
+        # Check by email now instead of name
+        statement = select(Student).where(Student.email == student.email)
         existing_student = session.exec(statement).first()
         
         if existing_student:

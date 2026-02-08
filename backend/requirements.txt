@@ -4,3 +4,4 @@ sqlmodel
 scikit-learn
 pandas
 python-multipart
+passlib[bcrypt]

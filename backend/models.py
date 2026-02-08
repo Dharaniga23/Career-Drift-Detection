@@ -5,6 +5,8 @@ from datetime import datetime
 class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    email: str = Field(unique=True, index=True)
+    hashed_password: str
     target_career: str  # e.g., "Data Scientist", "Full Stack Dev"
     current_drift_score: float = 0.0
     
