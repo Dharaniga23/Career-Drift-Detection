@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Onboarding from './components/Onboarding';
+import { Info, AlertCircle } from 'lucide-react';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ function Dashboard() {
 
   const [activities, setActivities] = useState([]);
   const [newActivityName, setNewActivityName] = useState("");
-  const [newActivityCategory, setNewActivityCategory] = useState("Frontend Dev");
+  const [newActivityCategory, setNewActivityCategory] = useState("Other");
   const [driftResult, setDriftResult] = useState(null);
 
   useEffect(() => {
@@ -179,19 +180,39 @@ function Dashboard() {
 
           {/* Right Column: AI Insights */}
           <div className="flex flex-col gap-8">
+
             <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
               <h2 className="text-xl font-semibold mb-4 text-purple-300">AI Insights</h2>
               {driftResult && driftResult.on_track_score !== undefined ? (
-                <div className={`text-center p-6 rounded-lg border-2 ${driftResult.is_drifting ? 'border-amber-500 bg-amber-900/20' : 'border-green-500 bg-green-900/20'}`}>
-                  <div className="text-4xl font-bold mb-2">
-                    {(driftResult.on_track_score * 100).toFixed(0)}%
+                <div className="space-y-6">
+                  <div className={`text-center p-6 rounded-lg border-2 ${driftResult.is_drifting ? 'border-amber-500 bg-amber-900/20' : 'border-green-500 bg-green-900/20'}`}>
+                    <div className="text-4xl font-bold mb-2">
+                      {(driftResult.on_track_score * 100).toFixed(0)}%
+                    </div>
+                    <div className="uppercase tracking-widest text-sm font-semibold mb-4">
+                      On-Track Confidence
+                    </div>
+                    <div className={`text-2xl font-bold ${driftResult.is_drifting ? 'text-amber-400' : 'text-green-400'}`}>
+                      {driftResult.message}
+                    </div>
                   </div>
-                  <div className="uppercase tracking-widest text-sm font-semibold mb-4">
-                    On-Track Confidence
-                  </div>
-                  <div className={`text-2xl font-bold ${driftResult.is_drifting ? 'text-amber-400' : 'text-green-400'}`}>
-                    {driftResult.message}
-                  </div>
+
+                  {driftResult.suggestions && driftResult.suggestions.length > 0 && (
+                    <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                      <h3 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2">
+                        <Info size={16} className="text-blue-400" />
+                        AI Feedback & Suggestions
+                      </h3>
+                      <ul className="space-y-3">
+                        {driftResult.suggestions.map((sug, i) => (
+                          <li key={i} className="text-sm text-slate-300 flex gap-2">
+                            <AlertCircle size={14} className="text-amber-500 shrink-0 mt-1" />
+                            {sug}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-slate-500 italic text-center">Add matching activities to analyze your progress.</p>

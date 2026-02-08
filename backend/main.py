@@ -50,9 +50,9 @@ class StudentProfile(BaseModel):
     recent_activities: List[ActivityInput]
 
 CAREER_SKILLS = {
-    "Data Scientist": ["Python", "Pandas", "Scikit-Learn", "SQL", "Statistics", "TensorFlow", "Keras", "Tableau", "PowerBI"],
-    "Frontend Dev": ["React", "CSS", "HTML", "JavaScript", "Figma", "Redux", "Tailwind", "Next.js", "TypeScript"],
-    "Backend Dev": ["FastAPI", "Docker", "PostgreSQL", "System Design", "Go", "Redis", "Kafka", "Microservices", "Flask"]
+    "Data Scientist": ["Python", "Pandas", "Scikit-Learn", "SQL", "Statistics", "TensorFlow", "Keras", "Tableau", "PowerBI", "Matplotlib", "Seaborn", "NumPy", "R", "Machine Learning", "Deep Learning", "Data Analysis", "Data Science", "Analytics", "Model", "Dataset"],
+    "Frontend Dev": ["React", "CSS", "HTML", "JavaScript", "Figma", "Redux", "Tailwind", "Next.js", "TypeScript", "Vue", "Angular", "Sass", "Web Design", "UI", "UX", "Frontend", "App", "Website"],
+    "Backend Dev": ["FastAPI", "Docker", "PostgreSQL", "System Design", "Go", "Redis", "Kafka", "Microservices", "Flask", "Node.js", "Express", "MongoDB", "Django", "Kubernetes", "API", "Database", "Server", "Backend"]
 }
 
 @app.post("/students/")
@@ -108,38 +108,83 @@ def predict_drift(profile: StudentProfile):
         return {"error": "Unknown career target"}
         
     relevant_skills = CAREER_SKILLS[target]
-    relevant_count = 0
+    other_skills = {}
+    for career, skills in CAREER_SKILLS.items():
+        if career != target:
+            other_skills[career] = skills
+
+    relevant_score = 0.0
     total = len(profile.recent_activities)
+    suggestions = []
     
     if total == 0:
-        return {"drift_score": 0, "status": "No Data", "message": "Add activities to analyze."}
+        return {"drift_score": 0, "status": "No Data", "message": "Add activities to analyze.", "suggestions": []}
 
     for act in profile.recent_activities:
-        is_relevant = False
-        if act.category == target: # Matches target career category
-            is_relevant = True
-        else:
-            for skill in relevant_skills:
-                if skill.lower() in act.name.lower():
-                    is_relevant = True
-                    break
+        act_score = 0.0
+        is_conflicting = False
+        conflicting_career = None
         
-        if is_relevant:
-            relevant_count += 1
+        # 1. Skill Matching (Priority)
+        act_name_lower = act.name.lower()
+        import re
+        
+        def is_skill_in_text(skill, text):
+            skill = skill.lower()
+            if len(skill) <= 2:
+                pattern = rf"\b{re.escape(skill)}\b"
+                return bool(re.search(pattern, text))
+            else:
+                return skill in text
+
+        # Check if it matches target skills
+        target_skill_match = False
+        for skill in relevant_skills:
+            if is_skill_in_text(skill, act_name_lower):
+                target_skill_match = True
+                break
+        
+        if target_skill_match:
+            act_score = 1.0
+        else:
+            # Check if it matches other career skills
+            for career, skills in other_skills.items():
+                for skill in skills:
+                    if is_skill_in_text(skill, act_name_lower):
+                        is_conflicting = True
+                        conflicting_career = career
+                        break
+                if is_conflicting: break
             
-    relevant_ratio = relevant_count / total
+            if is_conflicting:
+                act_score = 0.0
+                suggestions.append(f"'{act.name}' is more related to {conflicting_career}. It's not necessary for {target}.")
+            elif act.category == target:
+                act_score = 0.3 
+            else:
+                act_score = 0.0
+                if act.category == "Other" or "read" in act_name_lower or "watch" in act_name_lower:
+                    suggestions.append(f"'{act.name}' seems irrelevant to your {target} path.")
+
+        relevant_score += act_score
+            
+    relevant_ratio = relevant_score / total
     
     # Predict
     probs = model.predict_proba([[relevant_ratio]])[0]
     drift_probability = float(probs[1])
     on_track_probability = 1.0 - drift_probability
     
+    # De-duplicate suggestions
+    suggestions = list(set(suggestions))
+
     return {
         "drift_score": drift_probability,
         "on_track_score": on_track_probability,
         "is_drifting": bool(drift_probability > 0.5),
         "relevant_ratio": relevant_ratio,
-        "message": "Needs Attention" if drift_probability > 0.5 else "On Track"
+        "message": "Needs Attention" if drift_probability > 0.5 else "On Track",
+        "suggestions": suggestions
     }
 
 if __name__ == "__main__":
