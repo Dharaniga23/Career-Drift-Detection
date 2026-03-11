@@ -15,7 +15,7 @@ function CareerSelection({ onSelect }) {
     setLoading(true);
     const studentId = localStorage.getItem('studentId');
     try {
-      const response = await fetch(`http://127.0.0.1:8000/students/${studentId}/career`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/${studentId}/career`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_career: selectedId })
@@ -113,7 +113,7 @@ function Dashboard() {
       navigate('/');
     } else {
       // Fetch Student Profile
-      fetch(`http://127.0.0.1:8000/students/${studentId}`)
+      fetch(`${import.meta.env.VITE_API_URL}/students/${studentId}`)
         .then(res => res.json())
         .then(data => {
           setName(data.name);
@@ -124,20 +124,20 @@ function Dashboard() {
         .catch(err => console.error("Error fetching student:", err));
 
       // Fetch existing activities
-      fetch(`http://127.0.0.1:8000/students/${studentId}/activities/`)
+      fetch(`${import.meta.env.VITE_API_URL}/students/${studentId}/activities/`)
         .then(res => res.json())
         .then(data => setActivities(data))
         .catch(err => console.error("Error fetching activities:", err));
 
       // Update last visited
-      fetch(`http://127.0.0.1:8000/visit/${studentId}`, { method: 'POST' })
+      fetch(`${import.meta.env.VITE_API_URL}/visit/${studentId}`, { method: 'POST' })
         .catch(err => console.error("Error recording visit:", err));
     }
   }, [navigate]);
 
   const checkDrift = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/predict_drift', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/predict_drift`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ function Dashboard() {
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/activities/', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/activities/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newActivity)

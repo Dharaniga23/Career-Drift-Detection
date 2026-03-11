@@ -9,7 +9,7 @@ const NewsSection = () => {
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/news');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/news`);
       if (!response.ok) throw new Error('Failed to fetch news');
       const data = await response.json();
       setNews(data);

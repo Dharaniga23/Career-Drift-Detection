@@ -320,6 +320,27 @@ def send_signup_email(student_name: str, email: str, target_career: str):
     
     return send_email_via_smtp(email, subject, body_html)
 
+def send_login_email(student_name: str, email: str, target_career: str):
+    """
+    Sends a welcome email upon successful login.
+    """
+    subject = f"Successful Login to CareerCompass AI, {student_name}!"
+    
+    body_html = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #2c3e50;">Welcome back, {student_name}!</h2>
+        <p>You have successfully logged in to CareerCompass AI. Keep up the great work towards becoming a <strong>{target_career}</strong>.</p>
+        <p>Log your new activities today to keep our AI insights accurate and personalized.</p>
+        <p>Happy learning!</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 0.8em; color: #95a5a6;">Best Regards,<br>The CareerCompass AI Team</p>
+    </body>
+    </html>
+    """
+    
+    return send_email_via_smtp(email, subject, body_html)
+
 @app.post("/audit_drift")
 def audit_all_students():
     """
@@ -485,6 +506,10 @@ def login_student(login_in: StudentLogin):
         session.add(student)
         session.commit()
         session.refresh(student)
+        
+        # Send login email
+        send_login_email(student.name, student.email, student.target_career)
+        
         return student
 
 @app.post("/visit/{student_id}")
