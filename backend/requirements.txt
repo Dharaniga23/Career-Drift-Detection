@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlmodel
+scikit-learn
+pandas
+requests
+python-multipart
+passlib[bcrypt]
+python-dotenv
